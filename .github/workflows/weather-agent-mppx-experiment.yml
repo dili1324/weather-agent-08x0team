@@ -41,6 +41,12 @@ jobs:
         working-directory: node_mppx
         run: npm ci
 
+      - name: Install Tempo CLI
+        run: |
+          curl -fsSL https://tempo.xyz/install | bash
+          echo "$HOME/.tempo/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Restore Tempo accounts CLI store
         env:
           TEMPO_ACCOUNTS_CLI_STORE_B64_PART1: ${{ secrets.TEMPO_ACCOUNTS_CLI_STORE_B64_PART1 }}
@@ -56,16 +62,64 @@ jobs:
           ls -l "$HOME/.tempo/wallet/store.json"
           wc -c "$HOME/.tempo/wallet/store.json"
 
+      - name: Check restored Tempo wallet
+        id: tempo_wallet_whoami
+        continue-on-error: true
+        run: |
+          set +e
+          tempo wallet --format json whoami > /tmp/tempo-whoami.stdout 2> /tmp/tempo-whoami.stderr
+          code=$?
+          echo "tempo wallet whoami exit_code=$code"
+          echo "tempo wallet whoami stdout:"
+          python scripts/redact_ci_log.py /tmp/tempo-whoami.stdout
+          echo "tempo wallet whoami stderr:"
+          python scripts/redact_ci_log.py /tmp/tempo-whoami.stderr
+          exit "$code"
+
       - name: Typecheck mppx helper
         working-directory: node_mppx
         run: npm run typecheck
 
       - name: Run mppx paid weather canary
+        id: mppx_weather_canary
+        if: steps.tempo_wallet_whoami.outcome == 'success'
+        continue-on-error: true
         working-directory: node_mppx
-        run: npm run weather:twice
+        run: |
+          set +e
+          npm run weather:twice > /tmp/mppx-weather.stdout 2> /tmp/mppx-weather.stderr
+          code=$?
+          echo "npm run weather:twice exit_code=$code"
+          echo "npm run weather:twice stdout:"
+          python ../scripts/redact_ci_log.py /tmp/mppx-weather.stdout
+          echo "npm run weather:twice stderr:"
+          python ../scripts/redact_ci_log.py /tmp/mppx-weather.stderr
+          exit "$code"
+
+      - name: Summarize canary result
+        if: always()
+        run: |
+          echo "tempo wallet recognized: ${{ steps.tempo_wallet_whoami.outcome == 'success' }}"
+          echo "mppx weather payment canary attempted: ${{ steps.tempo_wallet_whoami.outcome == 'success' }}"
+          echo "mppx weather payment canary succeeded: ${{ steps.mppx_weather_canary.outcome == 'success' }}"
+          echo "If the canary failed before a payment challenge/credential log, investigate restore or wallet recognition."
+          echo "If it failed after payment challenge/credential logs, investigate payment authorization or MPP service behavior."
 
       - name: Run Weather Agent via mppx
+        if: steps.mppx_weather_canary.outcome == 'success'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python -m weather_agent
+
+      - name: Fail experiment if wallet or canary failed
+        if: always()
+        run: |
+          if [ "${{ steps.tempo_wallet_whoami.outcome }}" != "success" ]; then
+            echo "Tempo wallet was not recognized by the hosted runner."
+            exit 1
+          fi
+          if [ "${{ steps.mppx_weather_canary.outcome }}" != "success" ]; then
+            echo "mppx weather canary did not complete successfully."
+            exit 1
+          fi

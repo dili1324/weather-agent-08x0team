@@ -78,7 +78,7 @@ async function postJson(mppx: ReturnType<typeof Mppx.create>, path: string, payl
 async function createMppxClient(): Promise<ReturnType<typeof Mppx.create>> {
   const provider = createProvider()
   const accounts = await provider.request({ method: 'eth_accounts' })
-  log('loaded wallet state', { accounts })
+  log('loaded wallet state', { accountCount: Array.isArray(accounts) ? accounts.length : 0 })
 
   if (!Array.isArray(accounts) || accounts.length === 0) {
     throw new Error('No local wallet account available. Run npm run connect first.')
