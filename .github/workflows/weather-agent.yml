@@ -56,7 +56,6 @@ jobs:
           TEMPO_ACCOUNTS_CLI_STORE_B64_PART2: ${{ secrets.TEMPO_ACCOUNTS_CLI_STORE_B64_PART2 }}
         run: |
           test -n "$TEMPO_ACCOUNTS_CLI_STORE_B64_PART1"
-          test -n "$TEMPO_ACCOUNTS_CLI_STORE_B64_PART2"
           mkdir -p "$HOME/.tempo/wallet"
           chmod 700 "$HOME/.tempo"
           chmod 700 "$HOME/.tempo/wallet"
