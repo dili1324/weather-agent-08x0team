@@ -1,6 +1,6 @@
-# weather-agent-tempoisno010x2
+# weather-agent-04x0mountain
 
-weather-agent-tempoisno010x2 is a small Python 3.12 application that sends the current weather in Hanoi to Telegram. The current priority is an MVP proof of concept: run locally on macOS, pay through a secondary/test Tempo Wallet, and confirm Telegram receives the weather report.
+weather-agent-04x0mountain is a small Python 3.12 application that sends the current weather in Hanoi to Telegram. The current priority is an MVP proof of concept: run locally on macOS, pay through a secondary/test Tempo Wallet, and confirm Telegram receives the weather report.
 
 The original production path is:
 
@@ -65,7 +65,7 @@ scripts/make_clean_zip.sh
 Or run the equivalent command manually:
 
 ```bash
-zip -r weather-agent-tempoisno010x2-clean.zip . -x ".git/*" ".venv/*" "node_modules/*" "node_mppx/node_modules/*" "__MACOSX/*" "*/__MACOSX/*" "*.egg-info/*" "*/*.egg-info/*" "*.DS_Store" ".env"
+zip -r weather-agent-04x0mountain-clean.zip . -x ".git/*" ".venv/*" "node_modules/*" "node_mppx/node_modules/*" "__MACOSX/*" "*/__MACOSX/*" "*.egg-info/*" "*/*.egg-info/*" "*.DS_Store" ".env"
 ```
 
 ## Configuration
@@ -232,7 +232,7 @@ The application uses:
 - `POST /openweather/current-weather` with `lat`, `lon`, `units`, and `lang`.
 - Optional `POST /v1/chat/completions` on OpenAI MPP.
 
-The wallet address `0x8EF9ba17DfF6362F8832543Cb715720A5a943848` is treated only as a public reference. Never put a private key, seed phrase, or wallet recovery material into this repo or GitHub Actions logs.
+The wallet address `0x4315A89ddEAD8F6B059b4952aC219640bFe2f0c4` is treated only as a public reference. Never put a private key, seed phrase, or wallet recovery material into this repo or GitHub Actions logs.
 
 ## Telegram Integration
 
