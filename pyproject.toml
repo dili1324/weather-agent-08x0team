@@ -3,7 +3,7 @@ requires = ["setuptools>=69", "wheel>=0.45"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "weather-agent-07y0bean"
+name = "weather-agent-08x0team"
 version = "0.1.0"
 description = "MVP Weather Agent using Tempo MPP and Telegram"
 requires-python = ">=3.9"
