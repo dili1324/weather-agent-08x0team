@@ -261,7 +261,7 @@ npm run typecheck
 Verified local result:
 
 - `npm run typecheck` passes.
-- For this clone, authorize the Access Key with wallet `0x4315A89ddEAD8F6B059b4952aC219640bFe2f0c4`.
+- For this clone, authorize the Access Key with wallet `0x443F70fb257aD8c35d87A5276fc63653C12297a4`.
 - `npm run weather:once` completed `/geocode` and `/current-weather` through `mppx`.
 - `npm run weather:twice` completed two full OpenWeather flows in one process.
 - All four paid requests in `weather:twice` received payment challenges, created credentials, retried, and returned HTTP 200.

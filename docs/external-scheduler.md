@@ -9,7 +9,7 @@ The GitHub cron entry in `.github/workflows/weather-agent.yml` is kept only as a
 Repository:
 
 ```text
-dili1324/weather-agent-04x0mountain
+dili1324/weather-agent-05-peakpeak
 ```
 
 Workflow file:
@@ -21,7 +21,7 @@ Workflow file:
 GitHub REST endpoint:
 
 ```text
-POST https://api.github.com/repos/dili1324/weather-agent-04x0mountain/actions/workflows/weather-agent.yml/dispatches
+POST https://api.github.com/repos/dili1324/weather-agent-05-peakpeak/actions/workflows/weather-agent.yml/dispatches
 ```
 
 Request body:
@@ -36,7 +36,7 @@ GitHub documents this endpoint as "Create a workflow dispatch event". The `workf
 
 ## GitHub Token
 
-Create a fine-grained personal access token for the repository `dili1324/weather-agent-04x0mountain`.
+Create a fine-grained personal access token for the repository `dili1324/weather-agent-05-peakpeak`.
 
 Required repository permission:
 
@@ -58,7 +58,7 @@ curl -L \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "X-GitHub-Api-Version: 2026-03-10" \
-  https://api.github.com/repos/dili1324/weather-agent-04x0mountain/actions/workflows/weather-agent.yml/dispatches \
+  https://api.github.com/repos/dili1324/weather-agent-05-peakpeak/actions/workflows/weather-agent.yml/dispatches \
   -d '{"ref":"main"}'
 ```
 
@@ -75,7 +75,7 @@ Recent GitHub REST documentation describes a `200` response with workflow run de
 Create a new cron-job.org job:
 
 ```text
-URL: https://api.github.com/repos/dili1324/weather-agent-04x0mountain/actions/workflows/weather-agent.yml/dispatches
+URL: https://api.github.com/repos/dili1324/weather-agent-05-peakpeak/actions/workflows/weather-agent.yml/dispatches
 Method: POST
 Timezone: Asia/Ho_Chi_Minh
 Schedule: Every day at 06:50
@@ -106,7 +106,7 @@ After saving the job, run it manually once from cron-job.org and verify:
 
 - Never commit the GitHub token.
 - Store the token only in the external scheduler's secret/header configuration.
-- Use a fine-grained PAT scoped only to `dili1324/weather-agent-04x0mountain`.
+- Use a fine-grained PAT scoped only to `dili1324/weather-agent-05-peakpeak`.
 - Grant only `Actions: Read and write`.
 - Rotate the token if the scheduler account or token might be exposed.
 - Keep using the existing GitHub repository secrets for Telegram and Tempo wallet state. Do not move Tempo wallet store data into the external scheduler.
