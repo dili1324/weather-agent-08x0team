@@ -75,8 +75,6 @@ export async function authorizeAccessKey(provider: AccountsProvider): Promise<{
   }
 
   log('access key authorization completed', {
-    account: account?.address,
-    accessKey: accessKeyAddress,
     status: accessKeyStatus,
   })
 

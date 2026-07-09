@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -16,6 +17,22 @@ from weather_agent.weather_client import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def redact_helper_output(output: str, limit: int = 6000) -> str:
+    redacted = re.sub(r"(api\.telegram\.org/bot)[^/\s\"']+", r"\1<redacted>", output)
+    redacted = re.sub(r"(code=)[^&\s\"']+", r"\1<redacted>", redacted)
+    redacted = re.sub(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+", r"\1<redacted>", redacted)
+    redacted = re.sub(
+        r"(?i)\b(access[_-]?key|private[_-]?key|secret|seed(?:[_-]?phrase)?|token|wallet[_-]?store|account)"
+        r"([\"']?\s*[:=]\s*[\"']?)[^\"'\s,}]+",
+        r"\1\2<redacted>",
+        redacted,
+    )
+    redacted = re.sub(r"0x[a-fA-F0-9]{40}", "<redacted-address>", redacted)
+    if len(redacted) > limit:
+        return f"{redacted[:limit]}...<truncated>"
+    return redacted
 
 
 def _resolve_executable(name: str) -> str:
@@ -80,23 +97,26 @@ class MppxWeatherClient:
             ) from exc
 
         if completed.stderr:
-            logger.info("Node mppx helper stderr=%s", completed.stderr.strip())
+            logger.info("Node mppx helper stderr=%s", redact_helper_output(completed.stderr.strip()))
 
         if completed.returncode != 0:
+            safe_stderr = redact_helper_output(completed.stderr.strip())
             raise WeatherDataError(
                 "Node mppx weather helper failed "
-                f"exit_code={completed.returncode} stderr={completed.stderr.strip()!r}"
+                f"exit_code={completed.returncode} stderr={safe_stderr!r}"
             )
 
         try:
             payload = json.loads(completed.stdout)
         except json.JSONDecodeError as exc:
+            safe_stdout = redact_helper_output(completed.stdout.strip())
             raise WeatherDataError(
-                f"Node mppx weather helper did not return clean JSON stdout={completed.stdout!r}"
+                f"Node mppx weather helper did not return clean JSON stdout={safe_stdout!r}"
             ) from exc
 
         if not isinstance(payload, dict) or payload.get("ok") is not True:
-            raise WeatherDataError(f"Node mppx weather helper returned an error payload={payload!r}")
+            safe_payload = redact_helper_output(json.dumps(payload, ensure_ascii=False, default=str))
+            raise WeatherDataError(f"Node mppx weather helper returned an error payload={safe_payload}")
 
         run_payload = payload.get("run")
         if not isinstance(run_payload, dict):

@@ -16,8 +16,16 @@ class TempoRequestError(RuntimeError):
 
 
 def _redact_tempo_output(output: str, limit: int = 4000) -> str:
-    redacted = re.sub(r"(code=)[^&\s]+", r"\1<redacted>", output)
-    redacted = re.sub(r"(api.telegram.org/bot)[^/\s]+", r"\1<redacted>", redacted)
+    redacted = re.sub(r"(api\.telegram\.org/bot)[^/\s\"']+", r"\1<redacted>", output)
+    redacted = re.sub(r"(code=)[^&\s\"']+", r"\1<redacted>", redacted)
+    redacted = re.sub(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+", r"\1<redacted>", redacted)
+    redacted = re.sub(
+        r"(?i)\b(access[_-]?key|private[_-]?key|secret|seed(?:[_-]?phrase)?|token|wallet[_-]?store)"
+        r"([\"']?\s*[:=]\s*[\"']?)[^\"'\s,}]+",
+        r"\1\2<redacted>",
+        redacted,
+    )
+    redacted = re.sub(r"0x[a-fA-F0-9]{40}", "<redacted-address>", redacted)
     if len(redacted) > limit:
         return f"{redacted[:limit]}...<truncated>"
     return redacted
@@ -121,8 +129,9 @@ class TempoRequestClient:
         elapsed_ms = (perf_counter() - start) * 1000
         if result.returncode != 0:
             logger.error("Tempo request failed url=%s duration_ms=%.2f", url, elapsed_ms)
+            safe_output = _redact_tempo_output(result.stderr.strip() or result.stdout.strip())
             raise TempoRequestError(
-                f"Tempo request failed for {url}: {result.stderr.strip() or result.stdout.strip()}"
+                f"Tempo request failed for {url}: {safe_output}"
             )
         logger.info("Tempo request completed url=%s duration_ms=%.2f", url, elapsed_ms)
 

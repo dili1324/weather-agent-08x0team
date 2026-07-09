@@ -232,7 +232,7 @@ The application uses:
 - `POST /openweather/current-weather` with `lat`, `lon`, `units`, and `lang`.
 - Optional `POST /v1/chat/completions` on OpenAI MPP.
 
-The wallet address `0x34EC96b76a17634CA8a2102cf4D626a06264EC85` is treated only as a public reference. Never put a private key, seed phrase, or wallet recovery material into this repo or GitHub Actions logs.
+The wallet address is intentionally not published in this README. Never put a private key, seed phrase, wallet address, or wallet recovery material into this repo or GitHub Actions logs.
 
 ## Telegram Integration
 
