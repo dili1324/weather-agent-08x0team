@@ -43,9 +43,57 @@ jobs:
 
       - name: Install Tempo CLI
         run: |
-          curl -fsSL https://tempo.xyz/install | bash
-          echo "$HOME/.tempo/bin" >> "$GITHUB_PATH"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          set -euo pipefail
+
+          install_success=0
+          for attempt in 1 2 3; do
+            echo "Installing Tempo CLI (attempt ${attempt}/3)"
+            if curl -fsSL https://tempo.xyz/install | bash; then
+              install_success=1
+              break
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              sleep_seconds=$((attempt * 5))
+              echo "Tempo CLI install failed; retrying in ${sleep_seconds}s"
+              sleep "$sleep_seconds"
+            fi
+          done
+
+          if [ "$install_success" -ne 1 ]; then
+            echo "::error::Tempo CLI install failed after 3 attempts"
+            exit 1
+          fi
+
+          for tempo_dir in "$HOME/.tempo/bin" "$HOME/.local/bin"; do
+            if [ -d "$tempo_dir" ]; then
+              echo "$tempo_dir" >> "$GITHUB_PATH"
+              case ":$PATH:" in
+                *":$tempo_dir:"*) ;;
+                *) export PATH="$tempo_dir:$PATH" ;;
+              esac
+            fi
+          done
+
+          tempo_path="$(command -v tempo || true)"
+          if [ -z "$tempo_path" ]; then
+            tempo_path="$(find "$HOME/.tempo" "$HOME/.local" -type f -name tempo -perm -u+x 2> /dev/null | head -n 1 || true)"
+            if [ -n "$tempo_path" ]; then
+              tempo_dir="$(dirname "$tempo_path")"
+              echo "$tempo_dir" >> "$GITHUB_PATH"
+              export PATH="$tempo_dir:$PATH"
+            fi
+          fi
+
+          tempo_path="$(command -v tempo || true)"
+          if [ -z "$tempo_path" ]; then
+            echo "::error::Tempo CLI install completed but tempo was not found in PATH"
+            echo "PATH=$PATH"
+            exit 127
+          fi
+
+          echo "Tempo CLI found at: $tempo_path"
+          tempo --version || echo "tempo --version is not supported or failed; continuing"
 
       - name: Restore Tempo accounts CLI store
         env:
@@ -62,6 +110,14 @@ jobs:
 
       - name: Check restored Tempo wallet
         run: |
+          tempo_path="$(command -v tempo || true)"
+          if [ -z "$tempo_path" ]; then
+            echo "::error::Tempo CLI is not available in PATH before checking the restored wallet"
+            echo "PATH=$PATH"
+            exit 127
+          fi
+          echo "Tempo CLI found at: $tempo_path"
+
           set +e
           tempo wallet --format json whoami > /tmp/tempo-whoami.stdout 2> /tmp/tempo-whoami.stderr
           code=$?
